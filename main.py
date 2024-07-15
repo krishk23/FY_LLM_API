@@ -1,15 +1,13 @@
-# main.py
-
+import google.generativeai as genai
 import os
+import PyPDF2 as pdf
+from dotenv import load_dotenv
+from fpdf import FPDF
 import tempfile
 import re
-from fastapi import FastAPI, File, UploadFile, Form
+from fastapi import FastAPI, File, Form, UploadFile
+from fastapi.responses import FileResponse
 from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel
-import google.generativeai as genai
-import PyPDF2 as pdf
-from fpdf import FPDF
-from dotenv import load_dotenv
 
 load_dotenv()
 
@@ -19,20 +17,13 @@ app = FastAPI()
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Update with your frontend origin if needed
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-class JDInput(BaseModel):
-    jd: str
-
-def get_gemini_response(input):
-    model = genai.GenerativeModel('gemini-pro')
-    response = model.generate_content(input)
-    return response
-
+# Convert PDF to text
 def input_pdf_text(uploaded_file):
     reader = pdf.PdfReader(uploaded_file)
     text = ""
@@ -41,27 +32,30 @@ def input_pdf_text(uploaded_file):
         text += str(page.extract_text())
     return text
 
-input_prompt_template = """
-### As a skilled Application Tracking System (ATS) with advanced knowledge in technology and data science, your role is to meticulously evaluate a candidate's resume based on the provided job description.
+# Prompt template
+input_prompt = """
+### As a skilled Application Tracking System(ATS) with advanced knowledge in technology and data science . your role is to meticulously evaluate a candidate's resume based on the provided job description.
 
-### Your evaluation will involve analyzing the resume for relevant skills, experiences, and qualifications that align with the job requirements. Look for key buzzwords and specific criteria outlined in the job description to determine the candidate's suitability for the position.
+### Your evaluation will involve analyzing the resume for relevant skills , experiences, and qualifications that align with the job requirements.Look for key buzzwords and specific criteria outlined in the  job description to determine the  candidate's suitability for the position.
 
-### Provide a detailed assessment of how well the resume matches the job requirements, highlighting strengths, weaknesses, and any potential areas of concern. Offer constructive feedback on how the candidate can enhance their resume to better align with the job description and improve their chances of securing the position.
+### Provide a detailed assessment of how well the resume matches the job requiremnets ,highlighting strengths , weaknesses and any potential area of concern. Offer constructive feedback on how the condidate can enhance their resume to better align with the job description and improve their chances of securing the position.
 
-### Your evaluation should be thorough, precise, and objective, ensuring that the most qualified candidates are accurately identified based on their resume content in relation to the job criteria.
+### Your evaluation should be through, precise and objective,ensuring that the most qualified candidates are accurately identified based on their resume content in relation to the job criteria.
 
-### Parse the data of the job description and then create a list called Should do, which outlines what candidates should do for that particular position.
+### Remember to utilize your expertise in technology and data science to conduct a comprehensive evaluation that optimizes the recruitment process for the hiring company. your insights will play a crucial role in determining the candidate's compatibility with the job role.
 
-### Parse all CVs uploaded by candidates and create a list called Can do, which details what candidates can do.
+### parse data of job description and then make one list called Should do that is what candidate should do for that particular position. 
 
-### Now, match each candidate's Can do list with the Should do list and generate a report for each candidate, including their score and reasons for that score.
+### parse all CV of all candidates one time uploaded and then create one list called can do that is what candidate do. 
 
-### Generate a PDF report that includes the candidate's name, matching score, Can do list, Should do list, matching and missing items from the resume, strengths highlighted, and constructive feedback on how the candidate can enhance their resume to better align with the job description and improve their chances of securing the position.
+### Now You should match all candidates can do generated list with should do list and give the report of each candidate with it's score and reasons of that score. 
 
-Resume: {text}
-JD: {jd}
+### Generate one pdf which contains Candidate name ,matching score ,can do list , should do list,matching and missing from resume,highlighting strengths,Offer constructive feedback on how the condidate can enhance their resume to better align with the job description and improve their chances of securing the position and it should be the sequence of score card content.
+resume = {text}
+jd = {jd}
 """
 
+# Function to generate PDF
 class PDF(FPDF):
     def header(self):
         self.set_font('Arial', 'B', 12)
@@ -97,6 +91,7 @@ def generate_pdf(response_content, candidate_name):
     
     return pdf_output
 
+# Extract candidate's name from the response content
 def extract_candidate_name(response_content):
     match = re.search(r"Candidate Name:\s*(\w+\s*\w*)", response_content)
     if match:
@@ -105,13 +100,16 @@ def extract_candidate_name(response_content):
         return "Candidate"
 
 @app.post("/generate-report/")
-async def generate_report(jd: str = Form(...), resume: UploadFile = File(...)):
+async def generate_report(
+    jd: str = Form(...),
+    resume: UploadFile = File(...)
+):
     text = input_pdf_text(resume.file)
-    response = get_gemini_response(input_prompt_template.format(text=text, jd=jd))
+    response = genai.generate_content(input_prompt.format(text=text, jd=jd))
     
     response_content = response.candidates[0].content.parts[0].text
     candidate_name = extract_candidate_name(response_content)
     
     pdf_path = generate_pdf(response_content, candidate_name)
     
-    return {"filename": pdf_path}
+    return FileResponse(pdf_path, filename=f"{candidate_name}_evaluation_report.pdf")
