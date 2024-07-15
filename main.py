@@ -55,6 +55,11 @@ resume = {text}
 jd = {jd}
 """
 
+def get_gemini_response(input):
+    model = genai.GenerativeModel('gemini-pro')
+    response = model.generate_content(input)
+    return response
+
 # Function to generate PDF
 class PDF(FPDF):
     def header(self):
@@ -105,9 +110,9 @@ async def generate_report(
     resume: UploadFile = File(...)
 ):
     text = input_pdf_text(resume.file)
-    response = genai.generate(input_prompt.format(text=text, jd=jd))
+    response = get_gemini_response(input_prompt.format(text=text, jd=jd))
     
-    response_content = response.generations[0].text
+    response_content = response['content']  # Adjust according to actual response structure
     candidate_name = extract_candidate_name(response_content)
     
     pdf_path = generate_pdf(response_content, candidate_name)
