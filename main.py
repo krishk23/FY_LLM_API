@@ -105,9 +105,9 @@ async def generate_report(
     resume: UploadFile = File(...)
 ):
     text = input_pdf_text(resume.file)
-    response = genai.generate_content(input_prompt.format(text=text, jd=jd))
+    response = genai.generate(input_prompt.format(text=text, jd=jd))
     
-    response_content = response.candidates[0].content.parts[0].text
+    response_content = response.generations[0].text
     candidate_name = extract_candidate_name(response_content)
     
     pdf_path = generate_pdf(response_content, candidate_name)
