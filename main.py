@@ -112,7 +112,8 @@ async def generate_report(
     text = input_pdf_text(resume.file)
     response = get_gemini_response(input_prompt.format(text=text, jd=jd))
     
-    response_content = response['content']  # Adjust according to actual response structure
+    # Adjust according to actual response structure
+    response_content = response.text()  # or any attribute/method that gets the text content
     candidate_name = extract_candidate_name(response_content)
     
     pdf_path = generate_pdf(response_content, candidate_name)
