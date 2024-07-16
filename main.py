@@ -64,6 +64,7 @@ async def generate_report(
     text = input_pdf_text(resume.file)
     response = get_gemini_response(input_prompt.format(text=text, jd=jd))
     
-    response_content = response  # response is already a string
+    # Ensure the response is a string
+    response_content = str(response)
     
     return {"report": response_content}
