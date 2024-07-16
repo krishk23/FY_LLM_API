@@ -2,11 +2,7 @@ import google.generativeai as genai
 import os
 import PyPDF2 as pdf
 from dotenv import load_dotenv
-from fpdf import FPDF
-import tempfile
-import re
 from fastapi import FastAPI, File, Form, UploadFile
-from fastapi.responses import FileResponse
 from fastapi.middleware.cors import CORSMiddleware
 
 load_dotenv()
@@ -50,7 +46,7 @@ input_prompt = """
 
 ### Now You should match all candidates can do generated list with should do list and give the report of each candidate with it's score and reasons of that score. 
 
-### Generate one pdf which contains Candidate name ,matching score ,can do list , should do list,matching and missing from resume,highlighting strengths,Offer constructive feedback on how the condidate can enhance their resume to better align with the job description and improve their chances of securing the position and it should be the sequence of score card content.
+### Generate one text report which contains Candidate name ,matching score ,can do list , should do list,matching and missing from resume,highlighting strengths,Offer constructive feedback on how the condidate can enhance their resume to better align with the job description and improve their chances of securing the position and it should be the sequence of score card content.
 resume = {text}
 jd = {jd}
 """
@@ -59,42 +55,6 @@ def get_gemini_response(input):
     model = genai.GenerativeModel('gemini-pro')
     response = model.generate_content(input)
     return response
-
-# Function to generate PDF
-class PDF(FPDF):
-    def header(self):
-        self.set_font('Arial', 'B', 12)
-        self.cell(0, 10, 'Career Metaverse Smart ATS - Evaluation Report', 0, 1, 'C')
-
-    def chapter_title(self, title):
-        self.set_font('Arial', 'B', 12)
-        self.cell(0, 10, title, 0, 1, 'L')
-        self.ln(10)
-
-    def chapter_body(self, body):
-        for line in body.split('\n'):
-            if line.startswith("**"):
-                self.set_font('Arial', 'B', 12)
-                self.multi_cell(0, 10, line.replace("**", "").strip())
-            else:
-                self.set_font('Arial', '', 12)
-                self.multi_cell(0, 10, line)
-        self.ln()
-
-    def add_chapter(self, title, body):
-        self.add_page()
-        self.chapter_title(title)
-        self.chapter_body(body)
-
-def generate_pdf(response_content, candidate_name):
-    pdf = PDF()
-    pdf.add_chapter('Evaluation Output', response_content)
-    
-    with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as tmp_file:
-        pdf_output = tmp_file.name
-        pdf.output(pdf_output)
-    
-    return pdf_output
 
 # Extract candidate's name from the response content
 def extract_candidate_name(response_content):
@@ -114,8 +74,5 @@ async def generate_report(
     
     # Adjust according to actual response structure
     response_content = response.text()  # or any attribute/method that gets the text content
-    candidate_name = extract_candidate_name(response_content)
     
-    pdf_path = generate_pdf(response_content, candidate_name)
-    
-    return FileResponse(pdf_path, filename=f"{candidate_name}_evaluation_report.pdf")
+    return {"report": response_content}
