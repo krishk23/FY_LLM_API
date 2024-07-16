@@ -64,7 +64,10 @@ async def generate_report(
     text = input_pdf_text(resume.file)
     response = get_gemini_response(input_prompt.format(text=text, jd=jd))
     
-    # Extract the actual content from the response
-    content = response.result["candidates"][0]["content"]["parts"][0]["text"]
+    # Debug: Print the response structure
+    print(response)
+    
+    # Assuming the response has the content in the attribute `candidates`
+    content = response.candidates[0]["content"]["parts"][0]["text"]
     
     return {"report": content}
