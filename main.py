@@ -56,14 +56,6 @@ def get_gemini_response(input):
     response = model.generate_content(input)
     return response
 
-# Extract candidate's name from the response content
-def extract_candidate_name(response_content):
-    match = re.search(r"Candidate Name:\s*(\w+\s*\w*)", response_content)
-    if match:
-        return match.group(1).strip()
-    else:
-        return "Candidate"
-
 @app.post("/generate-report/")
 async def generate_report(
     jd: str = Form(...),
@@ -72,7 +64,6 @@ async def generate_report(
     text = input_pdf_text(resume.file)
     response = get_gemini_response(input_prompt.format(text=text, jd=jd))
     
-    # Adjust according to actual response structure
-    response_content = response.text()  # or any attribute/method that gets the text content
+    response_content = response  # response is already a string
     
     return {"report": response_content}
