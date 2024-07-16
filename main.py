@@ -4,6 +4,7 @@ import PyPDF2 as pdf
 from dotenv import load_dotenv
 from fastapi import FastAPI, File, Form, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
+import json
 
 load_dotenv()
 
@@ -65,9 +66,9 @@ async def generate_report(
     response = get_gemini_response(input_prompt.format(text=text, jd=jd))
     
     # Debug: Print the response structure
-    print(response)
+    print(json.dumps(response, indent=2, default=str))
     
-    # Assuming the response has the content in the attribute `candidates`
-    content = response.candidates[0]["content"]["parts"][0]["text"]
+    # Adjust the attribute access based on the printed structure
+    candidate_content = response.candidates[0].content.parts[0].text
     
-    return {"report": content}
+    return {"report": candidate_content}
