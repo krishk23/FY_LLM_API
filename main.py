@@ -5,7 +5,6 @@ from dotenv import load_dotenv
 from fastapi import FastAPI, File, Form, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 import json
-import re
 
 load_dotenv()
 
@@ -66,16 +65,11 @@ async def generate_report(
     text = input_pdf_text(resume.file)
     response = get_gemini_response(input_prompt.format(text=text, jd=jd))
     
-    # Debug: Print the response structure
-    print(json.dumps(response, indent=2, default=str))
-    
+    # Extract the raw content from the LLM response
     candidate_content = response.candidates[0].content.parts[0].text
-    
-    # Process the content to replace \n with actual new lines
-    processed_content = candidate_content.replace("\\n", "\n")  # Replace escaped new lines with actual new lines
-    processed_content = re.sub(r'\*\*\*(.*?)\*\*\*', r'### \1', processed_content)  # Replace *** with ### for bold
-    processed_content = re.sub(r'\n+', '\n', processed_content)  # Handle multiple new lines
-    
-    return {"report": processed_content}
+
+    # Return the simple content response
+    return {"report": candidate_content}
+
 
 
