@@ -71,10 +71,11 @@ async def generate_report(
     
     candidate_content = response.candidates[0].content.parts[0].text
     
-    # Process the content to replace * and \n with appropriate replacements
-    processed_content = candidate_content.replace("*", "").replace("\\n", "\n")  # Remove asterisks and handle new lines
+    # Process the content to replace \n with actual new lines
+    processed_content = candidate_content.replace("\\n", "\n")  # Replace escaped new lines with actual new lines
     processed_content = re.sub(r'\*\*\*(.*?)\*\*\*', r'### \1', processed_content)  # Replace *** with ### for bold
     processed_content = re.sub(r'\n+', '\n', processed_content)  # Handle multiple new lines
     
     return {"report": processed_content}
+
 
