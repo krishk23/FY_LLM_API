@@ -5,10 +5,11 @@ from dotenv import load_dotenv
 from fastapi import FastAPI, File, Form, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 import json
+import re
 
 load_dotenv()
 
-genai.configure(api_key=("AIzaSyDziGvuT1woHnH4_S3L_zQZV55Yj-123A8"))
+genai.configure(api_key=("AIzaSyDziGvuT1woHnH4_S3L_zQZV55Yj-123A8""))
 
 app = FastAPI()
 
@@ -68,8 +69,11 @@ async def generate_report(
     # Extract the raw content from the LLM response
     candidate_content = response.candidates[0].content.parts[0].text
 
-    # Return the simple content response
-    return {"report": candidate_content}
+    # Remove ** and \n from the content
+    processed_content = candidate_content.replace("**", "")  # Remove bold markers
+    processed_content = processed_content.replace("\\n", "\n")  # Replace escaped new lines with actual new lines
+    processed_content = processed_content.replace("\n", " ")  # Remove new lines by replacing them with spaces
 
+    return {"report": processed_content}
 
 
