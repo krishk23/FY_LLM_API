@@ -5,6 +5,7 @@ from dotenv import load_dotenv
 from fastapi import FastAPI, File, Form, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 import json
+import re
 
 load_dotenv()
 
@@ -68,7 +69,10 @@ async def generate_report(
     # Debug: Print the response structure
     print(json.dumps(response, indent=2, default=str))
     
-    # Adjust the attribute access based on the printed structure
     candidate_content = response.candidates[0].content.parts[0].text
     
-    return {"report": candidate_content}
+    # Process the content to remove asterisks and newline characters
+    processed_content = re.sub(r'\*\*(.*?)\*\*', r'<b>\1</b>', candidate_content)  # Bold text
+    processed_content = processed_content.replace("\n", "<br>")  # New lines
+    
+    return {"report": processed_content}
