@@ -71,8 +71,8 @@ async def generate_report(
     
     candidate_content = response.candidates[0].content.parts[0].text
     
-    # Process the content to remove asterisks and newline characters
-    processed_content = re.sub(r'\*\*(.*?)\*\*', r'<b>\1</b>', candidate_content)  # Bold text
-    processed_content = processed_content.replace("\n", "<br>")  # New lines
+    # Process the content
+    processed_content = candidate_content.replace("<br>", "\n")  # New lines
+    processed_content = re.sub(r'#\s*(.*)', r'<b>\1</b>', processed_content)  # Bold headers
     
     return {"report": processed_content}
