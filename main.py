@@ -70,7 +70,7 @@ async def generate_report(
     candidate_content = response.candidates[0].content.parts[0].text
 
     # Remove ** and \n from the content
-    processed_content = candidate_content.replace("**", "")  # Remove bold markers
+    processed_content = candidate_content.replace("***", "")  # Remove bold markers
     processed_content = processed_content.replace("\\n", "\n")  # Replace escaped new lines with actual new lines
     processed_content = processed_content.replace("\n", " ")  # Remove new lines by replacing them with spaces
 
