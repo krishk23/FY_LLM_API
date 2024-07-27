@@ -71,12 +71,10 @@ async def generate_report(
     
     candidate_content = response.candidates[0].content.parts[0].text
     
-    # Process the content to format the text properly
-    # Replace ** with <b> for bold text and \n with actual new lines
-    processed_content = re.sub(r'\*\*(.*?)\*\*', r'<b>\1</b>', candidate_content)  # Bold text
-    processed_content = processed_content.replace("\n", "\n")  # New lines
-    
-    # Additionally, replace <br> with new lines if present
-    processed_content = processed_content.replace("<br>", "\n")
+    # Process the content to replace * and \n with appropriate replacements
+    processed_content = candidate_content.replace("*", "").replace("\\n", "\n")  # Remove asterisks and handle new lines
+    processed_content = re.sub(r'\*\*\*(.*?)\*\*\*', r'### \1', processed_content)  # Replace *** with ### for bold
+    processed_content = re.sub(r'\n+', '\n', processed_content)  # Handle multiple new lines
     
     return {"report": processed_content}
+
