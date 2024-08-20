@@ -4,3 +4,4 @@ google-generativeai
 PyPDF2
 python-dotenv
 fpdf
+python-multipart
