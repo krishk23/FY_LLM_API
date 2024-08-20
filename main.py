@@ -129,6 +129,10 @@ async def generate_report(
             skill, level = line.replace("Should Do:", "").split(" - ")
             should_do_list.append({"skill": skill.strip(), "level": level.strip()})
 
+    # Check if should_do_list is empty
+    if not should_do_list:
+        return {"error": "No skills found in the 'Should Do' list. Cannot calculate matching percentage."}
+
     # Calculate the total possible score
     max_score_per_skill = 100
     total_max_score = len(should_do_list) * max_score_per_skill
@@ -155,7 +159,7 @@ async def generate_report(
                 break
 
     # Convert the total matching score to a percentage out of 100
-    matching_percentage = (total_matching_score / total_max_score) * 100
+    matching_percentage = (total_matching_score / total_max_score) * 100 if total_max_score > 0 else 0
 
     # Format the output to show the skills with levels side by side
     formatted_output = "Comparison of 'Can Do' and 'Should Do' Lists:\n"
